@@ -2,16 +2,12 @@ import os
 from subprocess import Popen, PIPE
 import sys
 import nltk
-import env
-
-env.assert_valid_env()
 
 
-def _tokenize(lang_short_code, text):
+def _tokenize(lang_short_code, text, bundle_path):
     runner_path = os.path.join(
-        os.environ['JOSHUA'],
+        bundle_path,
         'scripts',
-        'preparation',
         'tokenize.pl'
     )
     options = ['-l', lang_short_code]
@@ -23,15 +19,14 @@ def _tokenize(lang_short_code, text):
         env=os.environ
     )
     out, err = p.communicate(text.encode('utf8'))
-    sys.stderr.write(err.encode('utf8') + '\n')
-    return unicode(out.strip(), encoding='utf8').split('\n')
+    sys.stderr.write(text)
+    return str(out.strip(), encoding='utf8').split('\n')
 
 
-def _detokenize(lang_short_code, text):
+def _detokenize(lang_short_code, text, bundle_path):
     runner_path = os.path.join(
-        os.environ['JOSHUA'],
+        bundle_path,
         'scripts',
-        'preparation',
         'detokenize.pl'
     )
     options = ['-l', lang_short_code]
@@ -43,11 +38,11 @@ def _detokenize(lang_short_code, text):
         env=os.environ
     )
     out, err = p.communicate(text.encode('utf8'))
-    sys.stderr.write(err.encode('utf8') + '\n')
-    return unicode(out.strip(), encoding='utf8')
+    sys.stderr.write(err)
+    return str(out.strip(), encoding='utf8')
 
 
-def tokenize(lang_short_code, sentences):
+def tokenize(lang_short_code, sentences, bundle_path):
     """
     Returns a string with tokenized parts separated by a space character
     """
@@ -56,10 +51,10 @@ def tokenize(lang_short_code, sentences):
 
     text = '\n'.join(sentences)
 
-    return _tokenize(lang_short_code, text)
+    return _tokenize(lang_short_code, text, bundle_path)
 
 
-def detokenize(sentence):
+def detokenize(sentence, bundle_path):
     """
     Returns a string with tokenized parts separated by a space character
     """
@@ -74,8 +69,9 @@ class PreProcessor(object):
     3. lowercasing
     4. joining sentences with '\n'
     """
-    def __init__(self, lang_aliases):
+    def __init__(self, lang_aliases, bundle_path):
         self._lang = lang_aliases
+        self.bundle_path = bundle_path
         if lang_aliases.long_english_name != 'arabic':
             self._sentence_splitter = nltk.data.load(
                 'tokenizers/punkt/%s.pickle' % lang_aliases.long_english_name
@@ -93,7 +89,7 @@ class PreProcessor(object):
                 results.append('')
                 continue
             sentences = self._sentence_splitter(paragraph)
-            tokenized_sentences = tokenize(self._lang.short_name, sentences)
+            tokenized_sentences = tokenize(self._lang.short_name, sentences, self.bundle_path)
             lc_tokenized_sentences = [
                 sent.lower() for sent in tokenized_sentences
             ]
@@ -132,14 +128,15 @@ class PostProcessor(object):
     """
     Prepares text returned by the Joshua decoder for response to client
     """
-    def __init__(self, lang_aliases):
+    def __init__(self, lang_aliases, bundle_path):
         self._lang = lang_aliases
+        self.bundle_path= bundle_path
 
     def prepare(self, text):
         """
         Expected format of text is one sentence per line
         """
-        text = _detokenize(self._lang.short_name, text)
+        text = _detokenize(self._lang.short_name, text, self.bundle_path)
         lines = text.split('\n')
         lines = [line.capitalize() for line in lines]
         return merge_lines('\n'.join(lines))

@@ -1,7 +1,7 @@
 import argparse
 import sys
 from flask import Flask
-from flask.ext.restful import reqparse, Api, Resource
+from flask_restful import reqparse, Api, Resource
 from decoder import Decoder
 from languages import new_lang_from_long_english_name
 from text import PreProcessor, PostProcessor
@@ -12,7 +12,7 @@ app = Flask(__name__)
 api = Api(app)
 
 http_parser = reqparse.RequestParser()
-http_parser.add_argument('inputText', type=unicode, location='json')
+http_parser.add_argument('inputText', type=str, location='json')
 http_parser.add_argument('inputLanguage', type=str, location='json')
 
 decoders = {}
@@ -31,8 +31,8 @@ class TranslationEngine(Resource):
         target_lang = new_lang_from_long_english_name(target_lang_code)
         lang_pair = (source_lang.short_name, target_lang.short_name)
 
-        input_text = PreProcessor(source_lang).prepare(args['inputText'])
-        translation = PostProcessor(target_lang).prepare(
+        input_text = PreProcessor(source_lang, decoders[lang_pair].bundle_dir).prepare(args['inputText'])
+        translation = PostProcessor(target_lang, decoders[lang_pair].bundle_dir).prepare(
             decoders[lang_pair].translate(input_text)
         )
 
