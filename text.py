@@ -19,8 +19,8 @@ def _tokenize(lang_short_code, text, bundle_path):
         env=os.environ
     )
     out, err = p.communicate(text.encode('utf8'))
-    sys.stderr.write(text)
-    return str(out.strip(), encoding='utf8').split('\n')
+    sys.stderr.write(err.encode('utf8') + '\n')
+    return unicode(out.strip(), encoding='utf8').split('\n')
 
 
 def _detokenize(lang_short_code, text, bundle_path):
@@ -38,8 +38,8 @@ def _detokenize(lang_short_code, text, bundle_path):
         env=os.environ
     )
     out, err = p.communicate(text.encode('utf8'))
-    sys.stderr.write(err)
-    return str(out.strip(), encoding='utf8')
+    sys.stderr.write(err.encode('utf8') + '\n')
+    return unicode(out.strip(), encoding='utf8')
 
 
 def tokenize(lang_short_code, sentences, bundle_path):
