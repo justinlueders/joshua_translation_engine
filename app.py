@@ -37,6 +37,7 @@ class TranslationEngine(Resource):
         )
 
         response = {'outputText': translation}
+        print response
         return response, 201
 
 
@@ -147,5 +148,4 @@ if __name__ == '__main__':
         lang_pair = (args.source_lang[idx], args.target_lang[idx])
         decoders[lang_pair] = decoder
 
-    app.run(debug=True, use_reloader=False)
-    #app.run()
+    app.run(host='0.0.0.0', debug=True, use_reloader=False)
