@@ -7,6 +7,7 @@ from languages import new_lang_from_long_english_name
 from text import PreProcessor, PostProcessor
 
 DEFAULT_TCP_PORT = 56748
+DEFAULT_MEMORY = '8g'
 
 app = Flask(__name__)
 api = Api(app)
@@ -87,6 +88,15 @@ def handle_cli_args(argv):
              'option defaults to setting the first port number to %i.'
              % DEFAULT_TCP_PORT,
     )
+    cli_parser.add_argument(
+        '-m',
+        '--memory',
+        nargs='*',
+        default=[],
+        help='The amount of system memory to allocate per joshua translation service.'
+             'Omitting this option defaults to setting the memory to %s.'
+             % DEFAULT_MEMORY,
+    )
 
     # Sanity check: at least one Joshua bundle
     if not remaining_args:
@@ -131,6 +141,16 @@ def handle_cli_args(argv):
         cli_parser.print_help()
         sys.exit(2)
 
+    if parsed_args.memory == []:
+        parsed_args.memory = [DEFAULT_MEMORY] * num_bundles
+
+    elif len(parsed_args.memory) != num_bundles:
+        sys.stderr.write(
+            'ERROR: Memory specified incorrectly.\n'
+        )
+        cli_parser.print_help()
+        sys.exit(2)
+
     return parsed_args
 
 api.add_resource(
@@ -141,11 +161,11 @@ api.add_resource(
 if __name__ == '__main__':
 
     args = handle_cli_args(sys.argv)
-    for idx, bundle_confs in enumerate(zip(args.bundle_dir, args.port)):
-        bundle, port = bundle_confs
-        decoder = Decoder(bundle, port)
+    for idx, bundle_confs in enumerate(zip(args.bundle_dir, args.port, args.memory)):
+        bundle, port, memory = bundle_confs
+        decoder = Decoder(bundle, port, memory)
         decoder.start_decoder_server()
         lang_pair = (args.source_lang[idx], args.target_lang[idx])
         decoders[lang_pair] = decoder
 
-    app.run(host='0.0.0.0', debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', debug=True, port=8001, use_reloader=False)

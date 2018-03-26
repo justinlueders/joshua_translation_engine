@@ -6,9 +6,10 @@ class Decoder(object):
     """
     Joshua decoder
     """
-    def __init__(self, bundle_dir, port):
+    def __init__(self, bundle_dir, port, memory):
         self._bundle_dir = bundle_dir
         self._port = port
+        self._memory = memory
 
     @property
     def bundle_dir(self):
@@ -17,6 +18,10 @@ class Decoder(object):
     @property
     def port(self):
         return self._port
+
+    @property
+    def memory(self):
+        return self._memory
 
     @property
     def source_lang(self):
@@ -43,5 +48,5 @@ class Decoder(object):
 
     def start_decoder_server(self):
         runner_path = os.path.join(self.bundle_dir, 'joshua')
-        options = ['-server-port', str(self.port)]
+        options = ['-m', str(self.memory), '-server-port', str(self.port)]
         subprocess.Popen([runner_path] + options, env=os.environ)

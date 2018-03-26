@@ -7,6 +7,7 @@ LANGUAGE_ALIASES = [
     (u'nl', u'dutch'),
     (u'en', u'english'),
     (u'et', u'estonian'),
+    (u'fa', u'persian'),
     (u'fi', u'finnish'),
     (u'fr', u'french'),
     (u'de', u'german'),
